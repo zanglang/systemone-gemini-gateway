@@ -183,7 +183,13 @@ jobs:
           # shellcheck disable=SC2016
           kubectl exec "$pod" -- sh -c 'test -n "$GEMINI_API_KEY"'
       - name: helm test
-        run: helm test gw --logs
+        run: |
+          helm test gw --logs | tee helm-test.log
+          # Fail if no test hook ran: an empty suite must not pass silently.
+          if grep -q 'TEST SUITE: *None' helm-test.log || ! grep -Eq 'Phase: *Succeeded' helm-test.log; then
+            echo "::error::helm test did not run a passing test pod"
+            exit 1
+          fi
       - name: Dump cluster state
         if: failure()
         run: |

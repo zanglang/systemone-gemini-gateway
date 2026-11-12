@@ -11,4 +11,6 @@
 *~
 # CI-only values and helm-unittest suites are not part of the packaged chart.
 ci/
-tests/
+# Match only the helm-unittest suites. A bare `tests/` would also drop
+# templates/tests/ (the `helm test` hook), which helmignore matches by dir name.
+tests/*_test.yaml
