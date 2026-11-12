@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+# Test / tooling caches
+.coverage
+.coverage.*
+coverage.xml
+junit.xml
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+# Packaging / secrets
+*.tgz
+charts/**/charts/
+secret.env
+.env
+.DS_Store
