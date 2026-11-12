@@ -1,0 +1,39 @@
+{
+  "answers": {
+    "q2": {
+      "type": "score",
+      "score": 0.5,
+      "confidence": 0.5,
+      "legend": {
+        "0": "low",
+        "1": "{\"mid\":1}",
+        "2": "high"
+      },
+      "probabilities": {
+        "0": 0.6,
+        "1": 0.3,
+        "2": 0.1
+      }
+    },
+    "q0": {
+      "type": "noul",
+      "noul": 0.5,
+      "confidence": 0.1
+    },
+    "q1": {
+      "type": "choice",
+      "choice": "z",
+      "confidence": 0.4,
+      "probabilities": {
+        "x": 0.3,
+        "y": 0.3,
+        "z": 0.4
+      }
+    }
+  },
+  "usage": {
+    "total_input_tokens": 30,
+    "total_output_tokens": 0,
+    "total_tokens": 30
+  }
+}

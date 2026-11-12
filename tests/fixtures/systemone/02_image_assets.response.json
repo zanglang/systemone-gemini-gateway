@@ -1,0 +1,22 @@
+{
+  "model": "gemini-decision-1",
+  "answers": {
+    "tampered": {
+      "type": "noul",
+      "noul": 0.12
+    },
+    "brand": {
+      "type": "choice",
+      "choice": "acme",
+      "confidence": 0.75,
+      "probabilities": {
+        "acme": 0.75,
+        "other": 0.25
+      }
+    }
+  },
+  "usage": {
+    "input_tokens": 600,
+    "output_tokens": 0
+  }
+}

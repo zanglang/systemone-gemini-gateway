@@ -1,0 +1,37 @@
+{
+  "model": "gemini-decision-1",
+  "answers": {
+    "is it a bug?": {
+      "type": "noul",
+      "noul": 0.87
+    },
+    "severity": {
+      "type": "score",
+      "score": 1.42,
+      "confidence": 0.66,
+      "legend": {
+        "0": "Cosmetic",
+        "1": "Degraded",
+        "2": "Blocking"
+      },
+      "probabilities": {
+        "0": 0.1,
+        "1": 0.38,
+        "2": 0.52
+      }
+    },
+    "team": {
+      "type": "choice",
+      "choice": "payments",
+      "confidence": 0.9123456789,
+      "probabilities": {
+        "payments": 0.9123456789,
+        "web": 0.0876543211
+      }
+    }
+  },
+  "usage": {
+    "input_tokens": 412,
+    "output_tokens": 0
+  }
+}

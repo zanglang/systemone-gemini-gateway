@@ -1,0 +1,38 @@
+{
+  "model": "gemini-decision-1",
+  "answers": {
+    "チケット 🎫": {
+      "type": "noul",
+      "noul": 0.5
+    },
+    "a/b c": {
+      "type": "choice",
+      "choice": "z",
+      "confidence": 0.4,
+      "probabilities": {
+        "x": 0.3,
+        "y": 0.3,
+        "z": 0.4
+      }
+    },
+    "LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL": {
+      "type": "score",
+      "score": 0.5,
+      "confidence": 0.5,
+      "legend": {
+        "0": "low",
+        "1": "{\"mid\":1}",
+        "2": "high"
+      },
+      "probabilities": {
+        "0": 0.6,
+        "1": 0.3,
+        "2": 0.1
+      }
+    }
+  },
+  "usage": {
+    "input_tokens": 30,
+    "output_tokens": 0
+  }
+}

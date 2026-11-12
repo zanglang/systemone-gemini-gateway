@@ -1,0 +1,21 @@
+{
+  "answers": {
+    "q0": {
+      "noul": 0.12,
+      "confidence": 0.9
+    },
+    "q1": {
+      "choice": "acme",
+      "confidence": 0.75,
+      "probabilities": {
+        "acme": 0.75,
+        "other": 0.25
+      }
+    }
+  },
+  "usage": {
+    "total_input_tokens": 600,
+    "total_output_tokens": 0,
+    "total_tokens": 600
+  }
+}

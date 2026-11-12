@@ -1,0 +1,44 @@
+{
+  "answers": {
+    "q0": {
+      "type": "noul",
+      "noul": 0.87,
+      "confidence": 0.8
+    },
+    "q1": {
+      "type": "score",
+      "score": 1.42,
+      "confidence": 0.66,
+      "legend": {
+        "0": "Cosmetic",
+        "1": "Degraded",
+        "2": "Blocking"
+      },
+      "probabilities": {
+        "0": 0.1,
+        "1": 0.38,
+        "2": 0.52
+      }
+    },
+    "q2": {
+      "type": "choice",
+      "choice": "payments",
+      "confidence": 0.9123456789,
+      "probabilities": {
+        "payments": 0.9123456789,
+        "web": 0.0876543211
+      }
+    }
+  },
+  "usage": {
+    "total_input_tokens": 412,
+    "input_tokens_by_modality": [
+      {
+        "modality": "text",
+        "tokens": 412
+      }
+    ],
+    "total_output_tokens": 0,
+    "total_tokens": 412
+  }
+}

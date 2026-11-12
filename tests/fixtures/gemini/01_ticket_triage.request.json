@@ -1,0 +1,30 @@
+{
+  "model": "gemini-decision-1",
+  "input": "{\"ticket\":\"Checkout is blank after I click Pay\",\"tier\":\"enterprise\"}",
+  "questions": {
+    "q0": {
+      "type": "noul",
+      "instructions": "Is this a bug report?",
+      "criteria": {
+        "true_description": "Describes broken behaviour"
+      }
+    },
+    "q1": {
+      "type": "score",
+      "instructions": "How severe?",
+      "criteria": [
+        "Cosmetic",
+        "Degraded",
+        "Blocking"
+      ]
+    },
+    "q2": {
+      "type": "choice",
+      "instructions": "Which team owns it?",
+      "criteria": {
+        "payments": "Checkout and billing",
+        "web": ""
+      }
+    }
+  }
+}

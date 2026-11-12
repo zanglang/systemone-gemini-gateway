@@ -1,0 +1,34 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "ticket": "Checkout is blank after I click Pay",
+    "tier": "enterprise"
+  },
+  "questions": {
+    "is it a bug?": {
+      "type": "noul",
+      "instructions": "Is this a bug report?",
+      "criteria": {
+        "true": "Describes broken behaviour",
+        "false": null
+      }
+    },
+    "severity": {
+      "type": "score",
+      "instructions": "How severe?",
+      "criteria": [
+        "Cosmetic",
+        "Degraded",
+        "Blocking"
+      ]
+    },
+    "team": {
+      "type": "choice",
+      "instructions": "Which team owns it?",
+      "criteria": {
+        "payments": "Checkout and billing",
+        "web": null
+      }
+    }
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "model": "gemini-decision-1",
+  "input": [
+    {
+      "type": "text",
+      "text": "Check <image 1> for signs of tampering."
+    },
+    {
+      "type": "text",
+      "text": "\n\n<image 1>:\n"
+    },
+    {
+      "type": "image",
+      "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC",
+      "mime_type": "image/png"
+    },
+    {
+      "type": "text",
+      "text": "\n\n<image 2>:\n"
+    },
+    {
+      "type": "image",
+      "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNgYPgPAAEDAQAIicLsAAAAAElFTkSuQmCC",
+      "mime_type": "image/jpeg"
+    }
+  ],
+  "questions": {
+    "q0": {
+      "type": "noul",
+      "instructions": "Does <image 1> look altered?",
+      "criteria": {
+        "true_description": "Fonts or alignment differ",
+        "false_description": "Looks authentic"
+      }
+    },
+    "q1": {
+      "type": "choice",
+      "instructions": "Does <image 2> belong to Acme?",
+      "criteria": {
+        "acme": "Matches <image 2>",
+        "other": ""
+      }
+    }
+  }
+}

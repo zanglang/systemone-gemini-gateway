@@ -1,0 +1,46 @@
+{
+  "model": "jev-latest",
+  "state": [
+    "café ☕",
+    {
+      "k": "ü",
+      "a": 1
+    }
+  ],
+  "questions": {
+    "チケット 🎫": {
+      "type": "noul",
+      "instructions": {
+        "ask": "Urgent?"
+      }
+    },
+    "a/b c": {
+      "type": "choice",
+      "instructions": [
+        "Pick",
+        "one"
+      ],
+      "criteria": {
+        "x": {
+          "why": "because"
+        },
+        "y": [
+          "l1",
+          "l2"
+        ],
+        "z": null
+      }
+    },
+    "LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL": {
+      "type": "score",
+      "instructions": "Rate",
+      "criteria": [
+        "low",
+        {
+          "mid": 1
+        },
+        "high"
+      ]
+    }
+  }
+}

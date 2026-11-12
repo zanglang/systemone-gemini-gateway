@@ -1,0 +1,33 @@
+{
+  "model": "typesafe/jev-1.14",
+  "state": "Check `receipt` for signs of tampering.",
+  "questions": {
+    "tampered": {
+      "type": "noul",
+      "instructions": "Does `receipt` look altered?",
+      "criteria": {
+        "true": "Fonts or alignment differ",
+        "false": "Looks authentic"
+      }
+    },
+    "brand": {
+      "type": "choice",
+      "instructions": "Does `logo` belong to Acme?",
+      "criteria": {
+        "acme": "Matches logo",
+        "other": null
+      }
+    }
+  },
+  "assets": {
+    "receipt": {
+      "type": "image",
+      "format": "png",
+      "data_base64": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC"
+    },
+    "logo": {
+      "format": "jpeg",
+      "data_base64": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNgYPgPAAEDAQAIicLsAAAAAElFTkSuQmCC"
+    }
+  }
+}

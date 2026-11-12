@@ -1,0 +1,28 @@
+{
+  "model": "gemini-decision-1",
+  "input": "[\"café ☕\",{\"k\":\"ü\",\"a\":1}]",
+  "questions": {
+    "q0": {
+      "type": "noul",
+      "instructions": "{\"ask\":\"Urgent?\"}"
+    },
+    "q1": {
+      "type": "choice",
+      "instructions": "[\"Pick\",\"one\"]",
+      "criteria": {
+        "x": "{\"why\":\"because\"}",
+        "y": "[\"l1\",\"l2\"]",
+        "z": ""
+      }
+    },
+    "q2": {
+      "type": "score",
+      "instructions": "Rate",
+      "criteria": [
+        "low",
+        "{\"mid\":1}",
+        "high"
+      ]
+    }
+  }
+}
