@@ -179,6 +179,8 @@ jobs:
       - name: Pod received GEMINI_API_KEY
         run: |
           pod="$(kubectl get pods -l app.kubernetes.io/instance=gw -o jsonpath='{.items[0].metadata.name}')"
+          # Single quotes are intentional: $GEMINI_API_KEY must expand inside the pod.
+          # shellcheck disable=SC2016
           kubectl exec "$pod" -- sh -c 'test -n "$GEMINI_API_KEY"'
       - name: helm test
         run: helm test gw --logs

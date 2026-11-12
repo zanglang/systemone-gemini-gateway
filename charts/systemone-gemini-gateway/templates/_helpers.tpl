@@ -102,3 +102,39 @@ Name of the Secret the pod reads from. Validates the secret source first.
 {{- include "s1gw.fullname" . -}}
 {{- end -}}
 {{- end }}
+
+{{/*
+Non-secret env for the ConfigMap. Also hashed into checksum/config, so the
+Deployment does not need to include another template file.
+*/}}
+{{- define "s1gw.configData" -}}
+PORT: {{ .Values.service.port | int64 | quote }}
+METRICS_PORT: {{ .Values.service.metricsPort | int64 | quote }}
+GEMINI_MODEL: {{ .Values.gemini.model | quote }}
+GEMINI_BASE_URL: {{ .Values.gemini.baseUrl | quote }}
+{{- with .Values.gemini.imageResolution }}
+GEMINI_IMAGE_RESOLUTION: {{ . | quote }}
+{{- end }}
+UPSTREAM_TIMEOUT_SECONDS: {{ .Values.config.upstreamTimeoutSeconds | int64 | quote }}
+UPSTREAM_MAX_RETRIES: {{ .Values.config.upstreamMaxRetries | int64 | quote }}
+MAX_BODY_BYTES: {{ .Values.config.maxBodyBytes | int64 | quote }}
+ADVERTISED_MODELS: {{ .Values.config.advertisedModels | quote }}
+LOG_LEVEL: {{ .Values.config.logLevel | quote }}
+LOG_FORMAT: {{ .Values.config.logFormat | quote }}
+OTEL_SERVICE_NAME: {{ .Chart.Name | quote }}
+OTEL_METRICS_EXPORTER: {{ .Values.otel.metricsExporter | quote }}
+{{- with .Values.otel.otlpEndpoint }}
+OTEL_EXPORTER_OTLP_ENDPOINT: {{ . | quote }}
+{{- end }}
+OTEL_EXPORTER_OTLP_PROTOCOL: {{ .Values.otel.otlpProtocol | quote }}
+{{- end }}
+
+{{/*
+stringData for the chart-managed Secret (secret.create=true). Also hashed into checksum/secret.
+*/}}
+{{- define "s1gw.secretData" -}}
+{{ .Values.secretKeys.geminiApiKey }}: {{ required "secret.geminiApiKey is required when secret.create=true" .Values.secret.geminiApiKey | quote }}
+{{- with .Values.secret.inboundApiKeys }}
+{{ $.Values.secretKeys.inboundApiKeys }}: {{ . | quote }}
+{{- end }}
+{{- end }}

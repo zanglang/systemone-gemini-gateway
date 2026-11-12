@@ -12,9 +12,9 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/config: {{ include "s1gw.configData" . | sha256sum }}
         {{- if .Values.secret.create }}
-        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        checksum/secret: {{ include "s1gw.secretData" . | sha256sum }}
         {{- end }}
         prometheus.io/scrape: "true"
         prometheus.io/port: {{ .Values.service.metricsPort | int64 | quote }}
