@@ -1,0 +1,86 @@
+suite: default rendering (item 41)
+templates:
+  - templates/deployment.yaml
+  - templates/service.yaml
+  - templates/serviceaccount.yaml
+  - templates/configmap.yaml
+  - templates/secret.yaml
+  - templates/externalsecret.yaml
+  - templates/servicemonitor.yaml
+  - templates/networkpolicy.yaml
+  - templates/ingress.yaml
+release:
+  name: rel
+tests:
+  - it: renders Deployment, Service, ServiceAccount and ConfigMap
+    set:
+      existingSecret: foo
+    asserts:
+      - isKind:
+          of: Deployment
+        template: templates/deployment.yaml
+      - isKind:
+          of: Service
+        template: templates/service.yaml
+      - isKind:
+          of: ServiceAccount
+        template: templates/serviceaccount.yaml
+      - isKind:
+          of: ConfigMap
+        template: templates/configmap.yaml
+
+  - it: renders no optional resources by default
+    set:
+      existingSecret: foo
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: templates/secret.yaml
+      - hasDocuments:
+          count: 0
+        template: templates/externalsecret.yaml
+      - hasDocuments:
+          count: 0
+        template: templates/servicemonitor.yaml
+      - hasDocuments:
+          count: 0
+        template: templates/networkpolicy.yaml
+      - hasDocuments:
+          count: 0
+        template: templates/ingress.yaml
+
+  - it: points the pod at the existing Secret
+    set:
+      existingSecret: foo
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: GEMINI_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: foo
+                key: GEMINI_API_KEY
+        template: templates/deployment.yaml
+
+  - it: puts all non-secret env vars in the ConfigMap
+    set:
+      existingSecret: foo
+    asserts:
+      - equal:
+          path: data
+          value:
+            PORT: "8080"
+            METRICS_PORT: "9464"
+            GEMINI_MODEL: gemini-decision-1
+            GEMINI_BASE_URL: https://generativelanguage.googleapis.com
+            UPSTREAM_TIMEOUT_SECONDS: "30"
+            UPSTREAM_MAX_RETRIES: "2"
+            MAX_BODY_BYTES: "20971520"
+            ADVERTISED_MODELS: jev-latest,gemini-decision-1
+            LOG_LEVEL: INFO
+            LOG_FORMAT: json
+            OTEL_SERVICE_NAME: systemone-gemini-gateway
+            OTEL_METRICS_EXPORTER: prometheus
+            OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+        template: templates/configmap.yaml

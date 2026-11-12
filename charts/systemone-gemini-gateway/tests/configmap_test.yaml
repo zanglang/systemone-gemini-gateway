@@ -1,0 +1,37 @@
+suite: ConfigMap values
+templates:
+  - templates/configmap.yaml
+release:
+  name: rel
+set:
+  existingSecret: foo
+tests:
+  - it: logLevel flows into the ConfigMap that checksum/config hashes (item 46)
+    set:
+      config:
+        logLevel: DEBUG
+    asserts:
+      - equal:
+          path: data.LOG_LEVEL
+          value: DEBUG
+
+  - it: optional settings appear only when set
+    set:
+      gemini:
+        imageResolution: high
+      otel:
+        otlpEndpoint: http://collector:4318
+    asserts:
+      - equal:
+          path: data.GEMINI_IMAGE_RESOLUTION
+          value: high
+      - equal:
+          path: data.OTEL_EXPORTER_OTLP_ENDPOINT
+          value: http://collector:4318
+
+  - it: optional settings are omitted by default
+    asserts:
+      - notExists:
+          path: data.GEMINI_IMAGE_RESOLUTION
+      - notExists:
+          path: data.OTEL_EXPORTER_OTLP_ENDPOINT

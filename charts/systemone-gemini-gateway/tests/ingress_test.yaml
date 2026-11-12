@@ -1,0 +1,77 @@
+suite: Ingress (item 49)
+templates:
+  - templates/ingress.yaml
+release:
+  name: rel
+set:
+  existingSecret: foo
+tests:
+  - it: is not rendered by default
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders hosts and TLS from values
+    set:
+      ingress:
+        enabled: true
+        className: nginx
+        annotations:
+          example.com/a: b
+        hosts:
+          - host: gw.example.com
+            paths:
+              - path: /api
+                pathType: Exact
+          - host: gw2.example.com
+        tls:
+          - secretName: gw-tls
+            hosts:
+              - gw.example.com
+              - gw2.example.com
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: spec.ingressClassName
+          value: nginx
+      - equal:
+          path: metadata.annotations["example.com/a"]
+          value: b
+      - equal:
+          path: spec.rules[0].host
+          value: gw.example.com
+      - equal:
+          path: spec.rules[0].http.paths[0]
+          value:
+            path: /api
+            pathType: Exact
+            backend:
+              service:
+                name: rel-systemone-gemini-gateway
+                port:
+                  name: http
+      - equal:
+          path: spec.rules[1].host
+          value: gw2.example.com
+      - equal:
+          path: spec.rules[1].http.paths[0].path
+          value: /
+      - equal:
+          path: spec.rules[1].http.paths[0].pathType
+          value: Prefix
+      - equal:
+          path: spec.tls
+          value:
+            - secretName: gw-tls
+              hosts:
+                - gw.example.com
+                - gw2.example.com
+
+  - it: fails when enabled without hosts
+    set:
+      ingress:
+        enabled: true
+    asserts:
+      - failedTemplate:
+          errorPattern: "ingress.hosts must not be empty"

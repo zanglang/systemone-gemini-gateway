@@ -1,0 +1,122 @@
+# Every optional feature enabled. Secret source: externalSecret only.
+# ServiceMonitor renders only when monitoring.coreos.com/v1 is available
+# (pass --api-versions monitoring.coreos.com/v1 to helm template / lint).
+replicaCount: 2
+
+image:
+  tag: "0.1.0"
+  pullPolicy: Always
+
+imagePullSecrets:
+  - name: registry-credentials
+
+gemini:
+  imageResolution: high
+
+externalSecret:
+  enabled: true
+  refreshInterval: 30m
+  secretStoreRef:
+    kind: SecretStore
+    name: example-store
+  target:
+    name: gemini-gateway-credentials
+    creationPolicy: Owner
+    deletionPolicy: Delete
+  geminiApiKey:
+    remoteRef:
+      key: gemini/gateway
+      property: api_key
+  inboundApiKeys:
+    remoteRef:
+      key: gemini/gateway
+      property: inbound_keys
+  extraData:
+    - secretKey: EXTRA_TOKEN
+      remoteRef:
+        key: gemini/extra
+        property: token
+  dataFrom:
+    - extract:
+        key: gemini/gateway-extras
+  labels:
+    team: platform
+  annotations:
+    example.com/owner: platform
+
+config:
+  upstreamTimeoutSeconds: 45
+  upstreamMaxRetries: 3
+  advertisedModels: "jev-latest,gemini-decision-1"
+  logLevel: DEBUG
+  logFormat: text
+
+otel:
+  metricsExporter: otlp,prometheus
+  otlpEndpoint: http://otel-collector.observability:4318
+  otlpProtocol: http/protobuf
+
+serviceMonitor:
+  enabled: true
+  interval: 15s
+  labels:
+    release: prometheus
+
+networkPolicy:
+  enabled: true
+  ingressFrom:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: ingress-nginx
+  metricsFrom:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: monitoring
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: 20m
+  hosts:
+    - host: gateway.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: gateway-example-tls
+      hosts:
+        - gateway.example.com
+
+podAnnotations:
+  secret.reloader.stakater.com/reload: gemini-gateway-credentials
+podLabels:
+  example.com/tier: backend
+nodeSelector:
+  kubernetes.io/os: linux
+tolerations:
+  - key: dedicated
+    operator: Exists
+    effect: NoSchedule
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          topologyKey: kubernetes.io/hostname
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: systemone-gemini-gateway
+extraEnv:
+  - name: EXAMPLE_FLAG
+    value: "1"
+
+service:
+  type: ClusterIP
+  port: 8080
+  metricsPort: 9464
+
+serviceAccount:
+  create: true
+  name: gemini-gateway
+  automountServiceAccountToken: false

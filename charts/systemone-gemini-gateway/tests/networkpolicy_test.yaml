@@ -1,0 +1,73 @@
+suite: NetworkPolicy (item 48)
+templates:
+  - templates/networkpolicy.yaml
+release:
+  name: rel
+set:
+  existingSecret: foo
+tests:
+  - it: is not rendered by default
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: allows ingress on 8080 and 9464 from the configured peers and egress to 53 and 443 only
+    set:
+      networkPolicy:
+        enabled: true
+        ingressFrom:
+          - namespaceSelector:
+              matchLabels:
+                team: apps
+        metricsFrom:
+          - namespaceSelector:
+              matchLabels:
+                team: monitoring
+    asserts:
+      - isKind:
+          of: NetworkPolicy
+      - equal:
+          path: spec.policyTypes
+          value:
+            - Ingress
+            - Egress
+      - equal:
+          path: spec.ingress
+          value:
+            - from:
+                - namespaceSelector:
+                    matchLabels:
+                      team: apps
+              ports:
+                - protocol: TCP
+                  port: 8080
+            - from:
+                - namespaceSelector:
+                    matchLabels:
+                      team: monitoring
+              ports:
+                - protocol: TCP
+                  port: 9464
+      - equal:
+          path: spec.egress
+          value:
+            - ports:
+                - protocol: UDP
+                  port: 53
+                - protocol: TCP
+                  port: 53
+                - protocol: TCP
+                  port: 443
+
+  - it: omits ingress rules when no peers are configured
+    set:
+      networkPolicy:
+        enabled: true
+    asserts:
+      - notExists:
+          path: spec.ingress
+      - equal:
+          path: spec.policyTypes
+          value:
+            - Ingress
+            - Egress

@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "s1gw.fullname" . }}-test-connection"
+  labels:
+    {{- include "s1gw.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  restartPolicy: Never
+  automountServiceAccountToken: false
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 10001
+    runAsGroup: 10001
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: wget
+      image: busybox:1.37
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+            - ALL
+      env:
+        - name: INBOUND_API_KEYS
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "s1gw.secretName" . }}
+              key: {{ .Values.secretKeys.inboundApiKeys }}
+              optional: true
+      command: ["/bin/sh", "-c"]
+      args:
+        - |
+          set -e
+          # Use the first inbound token when auth is enabled.
+          if [ -n "$INBOUND_API_KEYS" ]; then
+            set -- --header "Authorization: Bearer ${INBOUND_API_KEYS%%,*}"
+          fi
+          wget -qO- "$@" http://{{ include "s1gw.fullname" . }}:{{ .Values.service.port | int64 }}/healthz
+          wget -qO- "$@" http://{{ include "s1gw.fullname" . }}:{{ .Values.service.port | int64 }}/v1/models

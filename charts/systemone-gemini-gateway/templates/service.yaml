@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "s1gw.fullname" . }}
+  labels:
+    {{- include "s1gw.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - name: http
+      port: {{ .Values.service.port | int64 }}
+      targetPort: http
+      protocol: TCP
+    - name: metrics
+      port: {{ .Values.service.metricsPort | int64 }}
+      targetPort: metrics
+      protocol: TCP
+  selector:
+    {{- include "s1gw.selectorLabels" . | nindent 4 }}

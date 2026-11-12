@@ -1,0 +1,54 @@
+suite: ServiceMonitor (item 47)
+templates:
+  - templates/servicemonitor.yaml
+release:
+  name: rel
+set:
+  existingSecret: foo
+tests:
+  - it: is not rendered when disabled, even if the API exists
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: is not rendered when enabled but the API is missing
+    set:
+      serviceMonitor:
+        enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders when enabled and the API exists
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1
+    set:
+      serviceMonitor:
+        enabled: true
+        interval: 15s
+        labels:
+          release: prometheus
+    asserts:
+      - isKind:
+          of: ServiceMonitor
+      - equal:
+          path: spec.endpoints[0].port
+          value: metrics
+      - equal:
+          path: spec.endpoints[0].path
+          value: /metrics
+      - equal:
+          path: spec.endpoints[0].interval
+          value: 15s
+      - equal:
+          path: metadata.labels.release
+          value: prometheus
+      - equal:
+          path: spec.selector.matchLabels
+          value:
+            app.kubernetes.io/name: systemone-gemini-gateway
+            app.kubernetes.io/instance: rel

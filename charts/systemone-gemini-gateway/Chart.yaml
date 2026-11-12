@@ -1,0 +1,15 @@
+apiVersion: v2
+name: systemone-gemini-gateway
+description: Gateway that accepts TypeSafe System One requests and answers them with Google's Gemini Decisions API
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+kubeVersion: ">=1.27.0-0"
+keywords:
+  - gemini
+  - systemone
+  - gateway
+  - opentelemetry
+home: https://github.com/zanglang/systemone-gemini-gateway
+sources:
+  - https://github.com/zanglang/systemone-gemini-gateway

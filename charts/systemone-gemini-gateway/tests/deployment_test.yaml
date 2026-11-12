@@ -1,0 +1,157 @@
+suite: Deployment (items 44-46)
+templates:
+  - templates/deployment.yaml
+release:
+  name: rel
+set:
+  existingSecret: foo
+tests:
+  # 44
+  - it: image defaults to the chart appVersion
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: ghcr.io/zanglang/systemone-gemini-gateway:0.1.0
+
+  - it: image uses an explicit tag
+    set:
+      image:
+        tag: "1.2.3"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: ghcr.io/zanglang/systemone-gemini-gateway:1.2.3
+
+  - it: image digest takes precedence over the tag
+    set:
+      image:
+        tag: "1.2.3"
+        digest: sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: ghcr.io/zanglang/systemone-gemini-gateway@sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+
+  # 45
+  - it: container security context is hardened
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext
+          value:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+
+  - it: pod security context is non-root with RuntimeDefault seccomp
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsNonRoot
+          value: true
+      - equal:
+          path: spec.template.spec.securityContext.runAsUser
+          value: 10001
+      - equal:
+          path: spec.template.spec.securityContext.seccompProfile
+          value:
+            type: RuntimeDefault
+
+  - it: mounts an emptyDir at /tmp
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: tmp
+            mountPath: /tmp
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: tmp
+            emptyDir: {}
+      - equal:
+          path: spec.template.spec.terminationGracePeriodSeconds
+          value: 20
+
+  # 46
+  - it: probes and ports are correct
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet
+          value:
+            path: /healthz
+            port: http
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet
+          value:
+            path: /readyz
+            port: http
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            name: http
+            containerPort: 8080
+            protocol: TCP
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            name: metrics
+            containerPort: 9464
+            protocol: TCP
+
+  - it: injects POD_NAME and POD_NAMESPACE and envFrom the ConfigMap
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+      - equal:
+          path: spec.template.spec.containers[0].envFrom
+          value:
+            - configMapRef:
+                name: rel-systemone-gemini-gateway
+
+  - it: has checksum and prometheus annotations
+    asserts:
+      - matchRegex:
+          path: spec.template.metadata.annotations["checksum/config"]
+          pattern: "^[a-f0-9]{64}$"
+      - equal:
+          path: spec.template.metadata.annotations["prometheus.io/scrape"]
+          value: "true"
+      - equal:
+          path: spec.template.metadata.annotations["prometheus.io/port"]
+          value: "9464"
+      - equal:
+          path: spec.template.metadata.annotations["prometheus.io/path"]
+          value: /metrics
+
+  # helm-unittest cannot compare values across tests, so the checksum change is
+  # covered indirectly: the checksum hashes the ConfigMap, whose content changes.
+  - it: ConfigMap content that feeds checksum/config follows config.logLevel
+    set:
+      config:
+        logLevel: DEBUG
+    asserts:
+      - matchRegex:
+          path: spec.template.metadata.annotations["checksum/config"]
+          pattern: "^[a-f0-9]{64}$"
+
+  - it: merges podAnnotations
+    set:
+      podAnnotations:
+        reloader.example.com/auto: "true"
+    asserts:
+      - equal:
+          path: spec.template.metadata.annotations["reloader.example.com/auto"]
+          value: "true"

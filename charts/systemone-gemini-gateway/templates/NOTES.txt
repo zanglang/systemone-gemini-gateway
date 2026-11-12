@@ -1,0 +1,18 @@
+{{ include "s1gw.fullname" . }} has been installed.
+
+1. Port-forward the API:
+
+  kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "s1gw.fullname" . }} {{ .Values.service.port }}:{{ .Values.service.port }}
+
+2. Try it:
+
+  curl -s http://127.0.0.1:{{ .Values.service.port }}/v1/models
+  curl -s http://127.0.0.1:{{ .Values.service.port }}/v1/systemone \
+    -H 'Content-Type: application/json' \
+    -d '{"model":"jev-latest","state":"The checkout page is blank.","questions":{"bug":{"type":"noul","instructions":"Is this a bug report?"}}}'
+{{- if .Values.externalSecret.enabled }}
+
+Pods stay in CreateContainerConfigError until External Secrets Operator has synced
+the Secret "{{ include "s1gw.secretName" . }}"; they then start on their own.
+Check with: kubectl --namespace {{ .Release.Namespace }} get externalsecret {{ include "s1gw.fullname" . }}
+{{- end }}

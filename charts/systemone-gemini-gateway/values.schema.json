@@ -1,0 +1,215 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "systemone-gemini-gateway values",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "global": { "type": "object" },
+    "replicaCount": { "type": "integer", "minimum": 0 },
+    "image": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "repository": { "type": "string", "minLength": 1 },
+        "tag": { "type": "string" },
+        "digest": { "type": "string", "pattern": "^(sha256:[a-f0-9]{64})?$" },
+        "pullPolicy": { "type": "string", "enum": ["Always", "IfNotPresent", "Never"] }
+      }
+    },
+    "imagePullSecrets": {
+      "type": "array",
+      "items": { "type": "object" }
+    },
+    "nameOverride": { "type": "string" },
+    "fullnameOverride": { "type": "string" },
+    "gemini": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "model": { "type": "string", "minLength": 1 },
+        "baseUrl": { "type": "string", "minLength": 1 },
+        "imageResolution": {
+          "type": "string",
+          "enum": ["", "low", "medium", "high", "ultra_high"]
+        }
+      }
+    },
+    "secretKeys": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "geminiApiKey": { "type": "string", "minLength": 1 },
+        "inboundApiKeys": { "type": "string", "minLength": 1 }
+      }
+    },
+    "externalSecret": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "apiVersion": { "type": "string", "minLength": 1 },
+        "refreshInterval": { "type": "string" },
+        "secretStoreRef": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "type": "string", "enum": ["ClusterSecretStore", "SecretStore"] },
+            "name": { "type": "string" }
+          }
+        },
+        "target": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "name": { "type": "string" },
+            "creationPolicy": {
+              "type": "string",
+              "enum": ["Owner", "Orphan", "Merge", "None"]
+            },
+            "deletionPolicy": {
+              "type": "string",
+              "enum": ["Retain", "Delete", "Merge"]
+            }
+          }
+        },
+        "geminiApiKey": { "$ref": "#/definitions/remoteRefEntry" },
+        "inboundApiKeys": { "$ref": "#/definitions/remoteRefEntry" },
+        "extraData": { "type": "array", "items": { "type": "object" } },
+        "dataFrom": { "type": "array", "items": { "type": "object" } },
+        "labels": { "type": "object" },
+        "annotations": { "type": "object" }
+      }
+    },
+    "existingSecret": { "type": "string" },
+    "secret": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "create": { "type": "boolean" },
+        "geminiApiKey": { "type": "string" },
+        "inboundApiKeys": { "type": "string" }
+      }
+    },
+    "config": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "upstreamTimeoutSeconds": { "type": "integer", "minimum": 1 },
+        "upstreamMaxRetries": { "type": "integer", "minimum": 0 },
+        "maxBodyBytes": { "type": "integer", "minimum": 1 },
+        "advertisedModels": { "type": "string" },
+        "logLevel": {
+          "type": "string",
+          "enum": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+        },
+        "logFormat": { "type": "string", "enum": ["json", "text"] }
+      }
+    },
+    "otel": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "metricsExporter": {
+          "type": "string",
+          "enum": ["otlp", "prometheus", "otlp,prometheus", "prometheus,otlp", "none"]
+        },
+        "otlpEndpoint": { "type": "string" },
+        "otlpProtocol": { "type": "string", "enum": ["http/protobuf", "grpc"] }
+      }
+    },
+    "service": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": { "type": "string", "enum": ["ClusterIP", "NodePort", "LoadBalancer"] },
+        "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
+        "metricsPort": { "type": "integer", "minimum": 1, "maximum": 65535 }
+      }
+    },
+    "serviceMonitor": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "interval": { "type": "string" },
+        "labels": { "type": "object" }
+      }
+    },
+    "networkPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "ingressFrom": { "type": "array", "items": { "type": "object" } },
+        "metricsFrom": { "type": "array", "items": { "type": "object" } }
+      }
+    },
+    "ingress": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "className": { "type": "string" },
+        "annotations": { "type": "object" },
+        "hosts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["host"],
+            "properties": {
+              "host": { "type": "string", "minLength": 1 },
+              "paths": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "path": { "type": "string" },
+                    "pathType": {
+                      "type": "string",
+                      "enum": ["Prefix", "Exact", "ImplementationSpecific"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tls": { "type": "array", "items": { "type": "object" } }
+      }
+    },
+    "resources": { "type": "object" },
+    "podSecurityContext": { "type": "object" },
+    "securityContext": { "type": "object" },
+    "podAnnotations": { "type": "object" },
+    "podLabels": { "type": "object" },
+    "nodeSelector": { "type": "object" },
+    "tolerations": { "type": "array", "items": { "type": "object" } },
+    "affinity": { "type": "object" },
+    "extraEnv": { "type": "array", "items": { "type": "object" } },
+    "serviceAccount": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "create": { "type": "boolean" },
+        "name": { "type": "string" },
+        "automountServiceAccountToken": { "type": "boolean" }
+      }
+    }
+  },
+  "definitions": {
+    "remoteRefEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "remoteRef": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "key": { "type": "string" },
+            "property": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}

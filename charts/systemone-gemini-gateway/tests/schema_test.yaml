@@ -1,0 +1,39 @@
+suite: values.schema.json (item 50)
+templates:
+  - templates/configmap.yaml
+release:
+  name: rel
+set:
+  existingSecret: foo
+tests:
+  - it: rejects an unknown otel.metricsExporter
+    set:
+      otel:
+        metricsExporter: foo
+    asserts:
+      - failedTemplate:
+          errorPattern: "metricsExporter"
+
+  - it: rejects a non-integer replicaCount
+    set:
+      replicaCount: two
+    asserts:
+      - failedTemplate:
+          errorPattern: "replicaCount"
+
+  - it: rejects an unknown externalSecret.secretStoreRef.kind
+    set:
+      externalSecret:
+        secretStoreRef:
+          kind: Bogus
+    asserts:
+      - failedTemplate:
+          errorPattern: "kind"
+
+  - it: accepts an empty gemini.imageResolution
+    set:
+      gemini:
+        imageResolution: ""
+    asserts:
+      - isKind:
+          of: ConfigMap

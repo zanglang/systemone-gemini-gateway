@@ -1,0 +1,190 @@
+# Default values for systemone-gemini-gateway.
+# Every key here is also constrained by values.schema.json.
+
+# -- Number of pod replicas. The app runs one uvicorn worker per pod; scale with replicas.
+replicaCount: 1
+
+image:
+  # -- Image repository.
+  repository: ghcr.io/zanglang/systemone-gemini-gateway
+  # -- Image tag. Empty means .Chart.AppVersion.
+  tag: ""
+  # -- Image digest (sha256:...). When set it is used instead of the tag.
+  digest: ""
+  # -- Image pull policy.
+  pullPolicy: IfNotPresent
+
+# -- Image pull secrets, as a list of {name: ...}.
+imagePullSecrets: []
+# -- Override the chart name used in resource names.
+nameOverride: ""
+# -- Override the full resource name.
+fullnameOverride: ""
+
+gemini:
+  # -- Gemini model every request is routed to (env GEMINI_MODEL).
+  model: gemini-decision-1
+  # -- Gemini API base URL (env GEMINI_BASE_URL).
+  baseUrl: https://generativelanguage.googleapis.com
+  # -- Resolution for image inputs: low|medium|high|ultra_high. Empty leaves it unset.
+  imageResolution: ""
+
+# Secret handling. Pick exactly ONE source:
+#   1. externalSecret.enabled  (primary path: External Secrets Operator creates the Secret)
+#   2. existingSecret          (a Secret created some other way)
+#   3. secret.create           (dev/CI only: plain values in the chart)
+# Rendering fails if zero or more than one source is configured.
+# Whichever source is used, the pod reads these keys from the resulting Secret:
+secretKeys:
+  # -- Key in the Secret holding the Gemini API key (required).
+  geminiApiKey: GEMINI_API_KEY
+  # -- Key in the Secret holding comma-separated inbound bearer tokens (optional; the secretKeyRef is optional: true).
+  inboundApiKeys: INBOUND_API_KEYS
+
+externalSecret:
+  # -- Render an ExternalSecret (source 1).
+  enabled: false
+  # -- ExternalSecret apiVersion. ESO >= 0.17 serves only v1; override only for old clusters.
+  apiVersion: external-secrets.io/v1
+  # -- How often ESO re-syncs the Secret.
+  refreshInterval: 1h
+  secretStoreRef:
+    # -- ClusterSecretStore or SecretStore.
+    kind: ClusterSecretStore
+    # -- Name of the store. Required when enabled.
+    name: ""
+  target:
+    # -- Name of the Secret ESO creates. Defaults to the chart fullname.
+    name: ""
+    # -- Owner | Orphan | Merge | None.
+    creationPolicy: Owner
+    # -- Retain | Delete | Merge.
+    deletionPolicy: Retain
+  # Minimal path: fill in the remote key (and property, for JSON-valued secrets).
+  geminiApiKey:
+    remoteRef:
+      # -- Remote key. Required when enabled (unless dataFrom supplies the Gemini key).
+      key: ""
+      # -- Property inside a JSON-valued remote secret. Omitted when empty.
+      property: ""
+  # Optional; the data entry is omitted when key is empty.
+  inboundApiKeys:
+    remoteRef:
+      key: ""
+      property: ""
+  # -- Extra ExternalSecret spec.data entries, rendered verbatim after the shorthand entries.
+  extraData: []
+  # -- ExternalSecret spec.dataFrom entries, rendered verbatim. Omitted when empty.
+  dataFrom: []
+  # -- Extra labels on the ExternalSecret.
+  labels: {}
+  # -- Extra annotations on the ExternalSecret.
+  annotations: {}
+
+# -- Name of an existing Secret holding secretKeys (source 2).
+existingSecret: ""
+
+secret:
+  # -- Create a plain Secret from the values below (source 3, dev/CI only).
+  create: false
+  # -- Gemini API key. Required when secret.create is true.
+  geminiApiKey: ""
+  # -- Comma-separated inbound bearer tokens. Empty disables inbound auth.
+  inboundApiKeys: ""
+
+config:
+  # -- Upstream request timeout in seconds (env UPSTREAM_TIMEOUT_SECONDS).
+  upstreamTimeoutSeconds: 30
+  # -- Upstream retries on 429/503/timeouts (env UPSTREAM_MAX_RETRIES).
+  upstreamMaxRetries: 2
+  # -- Maximum request body size in bytes (env MAX_BODY_BYTES).
+  maxBodyBytes: 20971520
+  # -- Comma-separated model names returned by GET /v1/models (env ADVERTISED_MODELS).
+  advertisedModels: "jev-latest,gemini-decision-1"
+  # -- Log level (env LOG_LEVEL).
+  logLevel: INFO
+  # -- Log format: json|text (env LOG_FORMAT).
+  logFormat: json
+
+otel:
+  # -- Metrics exporter: otlp|prometheus|otlp,prometheus|none (env OTEL_METRICS_EXPORTER).
+  metricsExporter: prometheus
+  # -- OTLP endpoint (env OTEL_EXPORTER_OTLP_ENDPOINT). Omitted when empty.
+  otlpEndpoint: ""
+  # -- OTLP protocol (env OTEL_EXPORTER_OTLP_PROTOCOL).
+  otlpProtocol: http/protobuf
+
+service:
+  # -- Service type.
+  type: ClusterIP
+  # -- API port (also the container port and env PORT).
+  port: 8080
+  # -- Prometheus scrape port (also the container port and env METRICS_PORT).
+  metricsPort: 9464
+
+serviceMonitor:
+  # -- Render a ServiceMonitor. Only rendered when the monitoring.coreos.com/v1 API is available.
+  enabled: false
+  # -- Scrape interval.
+  interval: 30s
+  # -- Extra labels on the ServiceMonitor (for example the Prometheus release selector).
+  labels: {}
+
+networkPolicy:
+  # -- Render a NetworkPolicy.
+  enabled: false
+  # -- NetworkPolicyPeer list allowed to reach the API port. Empty means no rule for it.
+  ingressFrom: []
+  # -- NetworkPolicyPeer list allowed to reach the metrics port. Empty means no rule for it.
+  metricsFrom: []
+  # egress is always DNS (53/UDP+TCP) and TCP 443 when enabled
+
+ingress:
+  # -- Render an Ingress.
+  enabled: false
+  # -- ingressClassName. Omitted when empty.
+  className: ""
+  # -- Ingress annotations.
+  annotations: {}
+  # -- Hosts. Each entry: {host: example.com, paths: [{path: /, pathType: Prefix}]}.
+  # paths defaults to a single "/" Prefix path.
+  hosts: []
+  # -- Ingress TLS entries, rendered verbatim.
+  tls: []
+
+# -- Container resources.
+resources:
+  requests: { cpu: 50m, memory: 96Mi }
+  limits:   { cpu: 500m, memory: 256Mi }
+# -- Pod security context.
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  fsGroup: 10001
+  seccompProfile: { type: RuntimeDefault }
+# -- Container security context.
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities: { drop: [ALL] }
+# -- Extra pod annotations (for example for Reloader).
+podAnnotations: {}
+# -- Extra pod labels.
+podLabels: {}
+# -- Node selector.
+nodeSelector: {}
+# -- Tolerations.
+tolerations: []
+# -- Affinity.
+affinity: {}
+# -- Extra container env entries, rendered verbatim.
+extraEnv: []
+
+serviceAccount:
+  # -- Create a ServiceAccount.
+  create: true
+  # -- ServiceAccount name. Defaults to the chart fullname when create is true, otherwise "default".
+  name: ""
+  # -- Mount the service account token into the pod.
+  automountServiceAccountToken: false
