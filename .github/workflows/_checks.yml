@@ -1,0 +1,125 @@
+name: checks
+
+# Shared quality gates (lint, test, chart). Called from ci.yml and release.yml.
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+env:
+  ACTIONLINT_VERSION: "1.7.12"
+  HELM_VERSION: "v4.3.1"
+  HELM_UNITTEST_VERSION: "v1.2.1"
+  KUBECONFORM_VERSION: "v0.7.0"
+  CHART_DIR: charts/systemone-gemini-gateway
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          enable-cache: true
+          python-version: "3.12"
+      - name: Install dependencies
+        run: uv sync --frozen
+      - name: ruff check
+        run: uv run ruff check .
+      - name: ruff format --check
+        run: uv run ruff format --check .
+      - name: mypy --strict
+        run: uv run mypy --strict src/
+      - name: Install actionlint
+        run: |
+          bash <(curl -fsSL "https://raw.githubusercontent.com/rhysd/actionlint/v${ACTIONLINT_VERSION}/scripts/download-actionlint.bash") "${ACTIONLINT_VERSION}"
+      - name: actionlint
+        run: ./actionlint -color
+
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          enable-cache: true
+          python-version: "3.12"
+      - name: Install dependencies
+        run: uv sync --frozen
+      - name: pytest (not live)
+        run: >-
+          uv run pytest -m "not live"
+          --junitxml=junit.xml
+          --cov-report=term-missing
+          --cov-report=xml:coverage.xml
+      - name: Coverage summary
+        if: always()
+        run: |
+          {
+            echo "## Coverage"
+            echo
+            uv run coverage report --format=markdown || true
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: translate.py must be 100% covered
+        run: uv run coverage report --include='*/s1gw/translate.py' --fail-under=100
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: test-reports
+          path: |
+            coverage.xml
+            junit.xml
+          if-no-files-found: warn
+
+  chart:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: azure/setup-helm@2f5e7bc67f1f9972ab16657bb795f36d8f04de0e # v5.1.0
+        with:
+          version: ${{ env.HELM_VERSION }}
+      - name: Install helm-unittest
+        run: helm plugin install https://github.com/helm-unittest/helm-unittest --version "${HELM_UNITTEST_VERSION}" --verify=false
+      - name: Install kubeconform
+        run: |
+          curl -fsSL "https://github.com/yannh/kubeconform/releases/download/${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz" \
+            | tar -xz -C "$RUNNER_TEMP" kubeconform
+          sudo install "$RUNNER_TEMP/kubeconform" /usr/local/bin/kubeconform
+          kubeconform -v
+      - name: helm lint --strict
+        run: |
+          for f in "${CHART_DIR}"/ci/*-values.yaml; do
+            echo "::group::helm lint ${f}"
+            helm lint --strict "${CHART_DIR}" -f "$f"
+            echo "::endgroup::"
+          done
+      - name: helm unittest
+        run: helm unittest "${CHART_DIR}"
+      - name: kubeconform
+        run: |
+          for f in "${CHART_DIR}"/ci/*-values.yaml; do
+            echo "::group::kubeconform ${f}"
+            helm template gw "${CHART_DIR}" -f "$f" --api-versions monitoring.coreos.com/v1 \
+              | kubeconform -strict -summary \
+                  -schema-location default \
+                  -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
+                  -
+            echo "::endgroup::"
+          done
+      - name: Chart version bump (PRs only)
+        if: github.event_name == 'pull_request'
+        env:
+          BASE: ${{ github.base_ref }}
+        run: scripts/check_chart_bump.sh "$BASE"

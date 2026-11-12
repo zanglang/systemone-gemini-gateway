@@ -1,0 +1,23 @@
+# Keep the build context small; only pyproject.toml, uv.lock, README.md and src/ are needed.
+.git
+.github
+.venv
+**/__pycache__
+*.py[cod]
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.coverage
+coverage.xml
+junit.xml
+htmlcov
+dist
+*.tgz
+tests
+charts
+docs
+scripts
+Makefile
+Dockerfile
+.dockerignore
+secret.env

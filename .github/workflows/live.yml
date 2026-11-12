@@ -1,0 +1,36 @@
+name: live
+
+# Manual only: never runs on PRs, so the API key is never exposed to fork PRs.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          enable-cache: true
+          python-version: "3.12"
+      - name: Install dependencies
+        run: uv sync --frozen
+      - name: Live smoke test
+        env:
+          RUN_LIVE: "1"
+          RECORD_FIXTURES: "1"
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: uv run pytest -m live
+      - name: Upload recorded fixtures
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: live-fixtures
+          path: tests/fixtures/gemini/live_*.json
+          if-no-files-found: ignore
