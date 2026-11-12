@@ -292,7 +292,7 @@ This repository only builds the image and chart. A deployment must supply:
 
 - Pin base images by digest (Dependabot maintains the tags today).
 - Audio, video and PDF inputs, and multipart asset uploads.
-- Vertex AI as an alternative upstream.
+- Vertex AI as an alternative upstream, blocked until Google serves the Decisions API on Vertex. Plan and decisions: [#2](https://github.com/zanglang/systemone-gemini-gateway/issues/2).
 - Traces.
 
 ## License
